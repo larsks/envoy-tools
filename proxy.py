@@ -17,9 +17,22 @@ class Proxy(object):
         self.setup_routes()
 
     def setup_routes(self):
-        bottle.post('/emu_reports/performance_report')(self.report)
+        bottle.post('/emu_reports/performance_report')(self.performance_report)
+        bottle.post('/emu_reports/task_complete')(self.task_complete)
 
-    def report(self):
+    def task_complete(self):
+        proxyreq = urllib2.Request(
+            '%s/task_complete?webcomm_version=3.0' % self.config.upstream_url,
+            bottle.request.body.read(),
+            {'Content-type': bottle.request.headers['content-type']})
+
+        fd = urllib2.urlopen(proxyreq)
+
+        bottle.response.status = fd.getcode()
+        bottle.response.set_header('Content-type', fd.headers['content-type'])
+        return fd.read()
+
+    def performance_report(self):
         if not bottle.request.headers['content-type'] == 'application/x-deflate':
             raise bottle.HTTPError(code=500,
                 output='Unsupport content type.')
@@ -39,7 +52,8 @@ class Proxy(object):
 
         # Send request on to server.
         bottle.request.body.seek(0)
-        proxyreq = urllib2.Request(self.config.upstream_url,
+        proxyreq = urllib2.Request(
+            '%s/performance_report?webcomm_version=3.0' % self.config.upstream_url,
             bottle.request.body.read(),
             {'Content-type': 'application/x-deflate'})
 
@@ -55,7 +69,7 @@ def parse_args():
     p.add_argument('--bind-address', '-b', default='127.0.0.1')
     p.add_argument('--port', '-p', default='8080')
     p.add_argument('--upstream-url', '-U',
-        default='https://reports.enphaseenergy.com/emu_reports/performance_report?webcomm_version=3.0')
+        default='https://reports.enphaseenergy.com/emu_reports')
     p.add_argument('--spool-dir', '-s',
         default='/var/spool/envoy')
 
