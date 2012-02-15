@@ -6,6 +6,13 @@ This tool is designed to intercept the data posted by the Enphase
 Envoy to the Enphase servers.  It writes data to a local spool
 directory and then sends it on to the Enphase servers.
 
+Requirements
+============
+
+The proxy web application requires a recent version of the bottle_ web framework.
+
+.. _bottle: http://bottlepy.org/
+
 Configuration
 =============
 
