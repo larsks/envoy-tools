@@ -22,7 +22,9 @@ class Proxy(object):
 
     def task_complete(self):
         proxyreq = urllib2.Request(
-            '%s/task_complete?webcomm_version=3.0' % self.config.upstream_url,
+            '%s/task_complete?%s' (
+	    	self.config.upstream_url,o
+		bottle.requerst.query_string),
             bottle.request.body.read(),
             {'Content-type': bottle.request.headers['content-type']})
 
@@ -53,7 +55,9 @@ class Proxy(object):
         # Send request on to server.
         bottle.request.body.seek(0)
         proxyreq = urllib2.Request(
-            '%s/performance_report?webcomm_version=3.0' % self.config.upstream_url,
+            '%s/performance_report?%s' % (
+	    	self.config.upstream_url,
+		bottle.request.query_string),
             bottle.request.body.read(),
             {'Content-type': 'application/x-deflate'})
 
