@@ -24,7 +24,7 @@ class Proxy(object):
         proxyreq = urllib2.Request(
             '%s/task_complete?%s' (
 	    	self.config.upstream_url,o
-		bottle.requerst.query_string),
+		bottle.request.query_string),
             bottle.request.body.read(),
             {'Content-type': bottle.request.headers['content-type']})
 
