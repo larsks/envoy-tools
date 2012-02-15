@@ -33,7 +33,8 @@ class Proxy(object):
         tf = tempfile.NamedTemporaryFile(
             dir=self.config.spool_dir,
             delete=False,
-            prefix=time.strftime('%Y-%m-%dT%H:%M:%S-', time.localtime(time.time())))
+            prefix=time.strftime('%Y-%m-%dT%H:%M:%S-', time.localtime(time.time())),
+            suffix='.xml')
         tf.write(urllib.unquote(parsed_data['body']))
 
         # Send request on to server.
