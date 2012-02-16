@@ -1,6 +1,11 @@
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import relationship, backref, sessionmaker
 from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
+from sqlalchemy.interfaces import PoolListener
+
+class ForeignKeysListener(PoolListener):
+    def connect(self, dbapi_con, con_record):
+        db_cursor = dbapi_con.execute('PRAGMA foreign_keys=ON')
 
 Base = declarative_base()
 
@@ -24,6 +29,7 @@ class Report (TableNameMixin,Base):
     report_timestamp = Column(Integer, primary_key=True)
     envoy_id = Column(String, ForeignKey('envoy.serial_num'))
     intervals = relationship('Interval', backref='report')
+    events = relationship('Event', backref='report')
 
 class Device (TableNameMixin,Base):
     eqid = Column(String, primary_key=True)
@@ -42,7 +48,7 @@ class Interval (TableNameMixin,Base):
     interval_duration = Column(Integer)
     eqid = Column(String)
     end_date = Column(Integer)
-    stats = relationship('IntervalStats', backref='interval')
+    stats = relationship('IntervalStats', backref='interval', uselist=False)
     report_id = Column(Integer, ForeignKey('report.report_timestamp'))
 
 class IntervalStats (TableNameMixin, Base):
@@ -68,12 +74,16 @@ class Event (TableNameMixin,Base):
     eqid = Column(Integer)
     serial_num = Column(Integer)
     event_date = Column(Integer)
-
     device_id = Column(Integer, ForeignKey('device.eqid'))
+    report_id = Column(Integer, ForeignKey('report.report_timestamp'))
 
 def init(dburi = 'sqlite:///:memory:', echo=False):
-    engine = create_engine(dburi, echo=echo)
+    engine = create_engine(dburi, echo=echo, listeners=[ForeignKeysListener()])
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine)
     return factory()
+
+if __name__ == '__main__':
+    import sys
+    session = init(sys.argv[1], echo=True)
 
