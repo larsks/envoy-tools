@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+import base64
 
 import zlib
 import urllib
@@ -20,11 +21,58 @@ class Proxy(object):
         bottle.post('/emu_reports/performance_report')(self.performance_report)
         bottle.post('/emu_reports/task_complete')(self.task_complete)
 
+    def log_response(self, body):
+        tf = tempfile.NamedTemporaryFile(
+            dir=self.config.spool_dir,
+            delete=False,
+            prefix=time.strftime('%Y-%m-%dT%H:%M:%S-', time.localtime(time.time())),
+            suffix='.response')
+
+        for k,v in bottle.response.headers.items():
+            print >>tf, '%s = %s' % (k,v)
+        print >>tf
+
+        if 'text/' in bottle.response.headers['content-type']:
+            tf.write(body)
+        elif 'application/xml' in bottle.response.headers['content-type']:
+            tf.write(body)
+        elif bottle.response.headers['content-type'] == 'application/x-deflate':
+            tf.write(zlib.decompress(body))
+        else:
+            tf.write(base64.encodestring(body))
+
+        return body
+
+    def log_request(self):
+        tf = tempfile.NamedTemporaryFile(
+            dir=self.config.spool_dir,
+            delete=False,
+            prefix=time.strftime('%Y-%m-%dT%H:%M:%S-', time.localtime(time.time())),
+            suffix='.request')
+
+        print >>tf, bottle.request.method, bottle.request.url
+        print >>tf
+        for k,v in bottle.request.headers.items():
+            print >>tf, '%s = %s' % (k,v)
+        print >>tf
+
+        if 'text/' in bottle.request.headers['content-type']:
+            tf.write(bottle.request.body.read())
+        elif 'application/xml' in bottle.request.headers['content-type']:
+            tf.write(bottle.request.body.read())
+        elif bottle.request.headers['content-type'] == 'application/x-deflate':
+            tf.write(zlib.decompress(bottle.request.body.read()))
+        else:
+            tf.write(base64.encodestring(bottle.request.body.read()))
+        bottle.request.body.seek(0)
+
     def task_complete(self):
+        self.log_request()
+
         proxyreq = urllib2.Request(
-            '%s/task_complete?%s' (
-	    	self.config.upstream_url,
-		bottle.request.query_string),
+            '%s/task_complete?%s' % (
+            self.config.upstream_url,
+        bottle.request.query_string),
             bottle.request.body.read(),
             {'Content-type': bottle.request.headers['content-type']})
 
@@ -32,9 +80,11 @@ class Proxy(object):
 
         bottle.response.status = fd.getcode()
         bottle.response.set_header('Content-type', fd.headers['content-type'])
-        return fd.read()
+        return self.log_response(fd.read())
 
     def performance_report(self):
+        self.log_request()
+
         if not bottle.request.headers['content-type'] == 'application/x-deflate':
             raise bottle.HTTPError(code=500,
                 output='Unsupport content type.')
@@ -56,8 +106,8 @@ class Proxy(object):
         bottle.request.body.seek(0)
         proxyreq = urllib2.Request(
             '%s/performance_report?%s' % (
-	    	self.config.upstream_url,
-		bottle.request.query_string),
+            self.config.upstream_url,
+        bottle.request.query_string),
             bottle.request.body.read(),
             {'Content-type': 'application/x-deflate'})
 
@@ -65,7 +115,7 @@ class Proxy(object):
 
         bottle.response.status = fd.getcode()
         bottle.response.set_header('Content-type', fd.headers['content-type'])
-        return fd.read()
+        return self.log_response(fd.read())
 
 def parse_args():
     p = argparse.ArgumentParser(description='Envoy data proxy')
