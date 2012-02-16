@@ -1,0 +1,8 @@
+#!/usr/bin/python
+
+EVENT_GRID_INSTABILITY	                = 101
+EVENT_POWER_ON_RESET                    = 509
+EVENT_DC_POWER_TOO_LOW                  = 512
+EVENT_MICROINVERTER_FAILED_TO_REPORT    = 10000
+EVENT_MICROINVERTER_SLEEPING            = 10009
+
