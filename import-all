@@ -1,0 +1,13 @@
+#!/bin/sh
+
+spool_dir=/var/spool/envoy
+processed_dir=$spool_dir/processed
+
+mkdir -p $processed_dir
+
+for x in /var/spool/envoy/*.xml; do
+	echo "Processing $x."
+	$HOME/bottle/bin/python import.py --dburi "sqlite:///$HOME/envoy.db" $x &&
+		mv $x $processed_dir
+done
+
