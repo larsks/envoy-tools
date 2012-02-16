@@ -16,6 +16,8 @@ def parse_args():
 def main():
     opts, args = parse_args()
 
+    print 'Using database: %s' % (opts.dburi)
+
     session = model.init(opts.dburi, echo=opts.debug)
 
     for datafile in args:
@@ -100,6 +102,7 @@ def main():
             device = session.query(model.Device).get(event.serial_num)
             if device:
                 device.events.append(event)
+            report.events.append(event)
 
             session.add(event)
 
