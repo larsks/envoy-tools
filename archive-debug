@@ -1,0 +1,8 @@
+#!/bin/sh
+
+spooldir=/var/spool/envoy
+debugdir=$spooldir/debug/$(date +%Y-%m-%d)
+
+mkdir -p $debugdir
+mv $spooldir/*.request $spooldir/*.response $debugdir
+
