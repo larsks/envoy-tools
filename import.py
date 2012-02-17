@@ -40,10 +40,11 @@ def main():
             envoy = model.Envoy(ip_addr = node_envoy.get('ip_addr'),
                     mac_addr = node_envoy.get('mac_addr'),
                     timezone = node_envoy.get('timezone'),
-                    serial_num = node_envoy.get('serial_num'),
-                    sw_version = node_envoy.get('sw_version'))
+                    serial_num = node_envoy.get('serial_num'))
 
             session.add(envoy)
+
+	envoy.sw_version = node_envoy.get('sw_version')
 
         for node_device in node_report.findall('device'):
             device = session.query(model.Device).get(node_device.get('eqid'))
