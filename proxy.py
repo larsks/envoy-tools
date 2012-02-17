@@ -36,7 +36,7 @@ class Proxy(object):
             tf.write(body)
         elif 'application/xml' in bottle.response.headers['content-type']:
             tf.write(body)
-        elif 'application/deflate' in bottle.response.headers['content-type']:
+        elif 'application/x-deflate' in bottle.response.headers['content-type']:
             tf.write(zlib.decompress(body))
         else:
             tf.write(base64.encodestring(body))
@@ -60,7 +60,7 @@ class Proxy(object):
             tf.write(bottle.request.body.read())
         elif 'application/xml' in bottle.request.headers['content-type']:
             tf.write(bottle.request.body.read())
-        elif 'application/deflate' in bottle.request.headers['content-type']:
+        elif 'application/x-deflate' in bottle.request.headers['content-type']:
             tf.write(zlib.decompress(bottle.request.body.read()))
         else:
             tf.write(base64.encodestring(bottle.request.body.read()))
